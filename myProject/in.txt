@@ -1,0 +1,42 @@
+5 COPY    START   1000        #COPY_FILE_FROM_INPUT_TO_OUTPUT
+10 FIRST   STL     RETADR      #SAVE_RETURN_ADDRESS
+15 CLOOP   JSUB    RDREC       #READ_INPUT_RECORD
+20         LDA     LENGTH      #TEST_FOR_EOF_(LENGTH=0)
+25         COMP    ZERO        #
+30         JEQ     ENDFIL      #EXIT_IF_EOF_FOUND
+35         JSUB    WRREC       #WRITE_OUTPUT_RECORD
+40         J       CLOOP       #LOOP
+45 ENDFIL  LDA     EOF         #INSERT_END_OF_FILE_MARKER
+50         STA     BUFFER      #
+55         LDA     THREE       #SET_LENGTH_=3
+60         STA     LENGTH      #
+65         JSUB    WRREC       #WRITE_EOF
+70         LDL     RETADR      #GET_RETURN_ADDRESS
+75         RSUB                #RETURN_TO_CALLER
+80 EOF     BYTE    C'EOF'      #
+85 THREE   WORD    3           #
+90 ZERO    WORD    0           #
+95 RETADR  RESW    1           #
+100 LENGTH  RESW    1           #LENGTH_OF_RECORD
+105 BUFFER  RESB    4096        #4096-BYTE_BUFFER_AREA
+110 .
+115 .   SUBROUTINE TO READ RECORD INTO BUFFER
+120 .
+125 RDREC   LDX     ZERO        #CLEAR_LOOP_COUNTER
+130         LDA     ZERO        #CLEAR_A_TO_ZERO
+135 RLOOP   TD      INPUT       #TEST_INPUT_DEVICE
+140         JEQ     RLOOP       #LOOP_UNTIL_READY
+145         RD      INPUT       #READ_CHARACTER_INTO_REGISTER_A
+150         COMP    ZERO        #TEST_FOR_END_OF_RECORD_{X'00'}
+155         JEQ     EXIT        #EXIT_LOOP_IF_EOR
+160         STCH    BUFFER,x    #STORE_CHARACTER_IN_BUFFER
+165         TIX     MAXLEN      #LOOP_UNLESS_MAX_LENGHT 
+170         JLT     RLOOP       #HAS_BEEN_REACHED
+175 EXIT    STX     LENGTH      #SAVE_RECORD_LENGHT 
+180         RSUB                #RETURN_TO_CALLER
+185 INPUT   BYTE    X'F1'       #CODE_FOR_INPUT_DEVICE
+190 MAXLEN  WORD    4090        #
+195 WRREC   LDX ZERO    #COMMENT 
+200         FLOAT   #
+205         LDA #3  #
+210         LDT #4096   #COMMENT 
